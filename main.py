@@ -12,7 +12,7 @@ db=mysqlpy.connect(
     port='3306',
     user='root',
     passwd='example',
-    database='binomotron_save',
+    database='binomotron',
 )
 
 #selection de la colone "nom" de la table "eleve"
@@ -218,8 +218,6 @@ def nouveau_projet(mycursor):
     mycursor.execute(requeteprojet, (id_projet_tlup,nom_projet, valeursdatedebut, valeursdatefin))
 
 
-
-
 def aficher_projet(mycursor,suite_logique):
     print("aficher les Projets")
     
@@ -285,9 +283,6 @@ cursor.execute('SELECT id_projet FROM Projet ORDER BY id_projet DESC LIMIT 1')
 id_groupe = cursor.fetchall()
 # Step 7: Convert the retrieved rows into a DataFrame using `pd.DataFrame`
 df_groupe = pd.DataFrame(id_groupe)
-# Step 8: Display the DataFrame in a table using `st.dataframe`
-st.dataframe(df_groupe)
-
 mycursor.execute("SELECT * FROM Projet")
 df_projet = pd.DataFrame(cursor.fetchall())
 mycursor.execute("SELECT * FROM projet_groupe")
@@ -297,28 +292,27 @@ df_eleve_groupe = pd.DataFrame(cursor.fetchall())
 mycursor.execute("SELECT * FROM eleve")
 df_eleve = pd.DataFrame(cursor.fetchall())
 
-
 id_dernier_projet= value = df_projet.iloc[-1, 0]
 print('dernierprojet= ',id_dernier_projet,", nom= ",df_projet.iloc[-1, 1])
-
+st.title(f"binomotron: {df_projet.iloc[-1, 1]}")
 filtered_df_groupe = df_projet_groupe[df_projet_groupe[0] == df_projet.iloc[-1, 0]]
 print(filtered_df_groupe[1].values)
 i=1
+#merged_df = pd.merge(df_eleve_groupe, df_eleve, left_on=0, right_on=0, how='left')
+#print(merged_df)
 for element in (filtered_df_groupe[1].values):
     st.title(f"Groupe: {i}")
     i=i+1
+    print('i=',i)
+    
     filtered_df_eleve = df_eleve_groupe[df_eleve_groupe[1] == element]
-    print(filtered_df_eleve)
-    df_test=pd.DataFrame(filtered_df_eleve)
-    df_test = df_test.drop([1], axis=1)
+    print('id eleve',filtered_df_eleve)
+    
+    merged_df = pd.merge(filtered_df_eleve, df_eleve, left_on=0, right_on=0, how='left')
+    print(merged_df)
+    df_test=pd.DataFrame(merged_df)
     st.dataframe(df_test)
-    #merged_df = pd.merge(df1, df2, left_on='id', right_on='id1', how='left')
-
-
-
-
-st.title("Binomotron")
-
+    
 
 db.commit()
 mycursor.execute("SET FOREIGN_KEY_CHECKS=0;")
