@@ -1,6 +1,5 @@
 import random
 import mysql.connector as mysqlpy
-from datetime import datetime
 import streamlit as st
 import pandas as pd
 #####################################################################
@@ -12,13 +11,13 @@ db=mysqlpy.connect(
     port='3306',
     user='root',
     passwd='example',
-    database='binomotron',
+    database='binomotron_save',
 )
 
 #selection de la colone "nom" de la table "eleve"
 mycursor = db.cursor()
 
-def nouveau_projet(mycursor):
+def nouveau_projet(mycursor,nom_projet,N):
     print(" nouveau projet")
         
     #information de la table "eleve"
@@ -35,18 +34,18 @@ def nouveau_projet(mycursor):
 
 
     for i in range(0,len(idresult)):
-        for z in prenom_result[i]:#boucle des mail
+        for z in prenom_result[i]:
             prenom=""
             for ligne_prenom in z:
                 for element in ligne_prenom:
                     prenom=prenom+element
-        for z in nom_result[i]:#boucle des mail
+        for z in nom_result[i]:
             nom=""
             for ligne_nom in z:
                 for element in ligne_nom:
                     nom=nom+element
                 
-        for z in mail_result[i]:#boucle des mail
+        for z in mail_result[i]:
             mail=""
             for ligne_mail in z:
                 for element in ligne_mail:
@@ -60,43 +59,6 @@ def nouveau_projet(mycursor):
 #####################################################################
 #                           #INTERACTION PROJET                     #
 #####################################################################
-
-    date_de_debut=""
-    date_de_fin=""
-    nom_projet =input("nom du projet:"or"projet test")
-
-
-    while True:
-        try:
-            date_saisie = input('Entrez la  date de debut du projet(JJ/MM/AAAA): ')
-            if date_saisie == "":
-                date_saisie = "12/12/1212"
-            date_objet = datetime.strptime(date_saisie, '%d/%m/%Y')
-            date_formatee_debut = date_objet.strftime('%Y-%m-%d')
-        except ValueError:
-            print("Invalid date")
-        else:
-            break
-
-    del date_objet
-
-    while True:
-        try:
-            date_saisie = input('Entrez la  date de fin du projet(JJ/MM/AAAA): ')
-            if date_saisie == "":
-                date_saisie = "12/12/1212"
-            date_objet = datetime.strptime(date_saisie, '%d/%m/%Y')
-            date_formatee_fin = date_objet.strftime('%Y-%m-%d')
-        except ValueError:
-            print("Invalid date")
-        else:
-            break
-
-    requeteprojet = '''INSERT INTO Projet (id_projet,libelle,date_debut,date_fin) VALUES (%s,%s,%s,%s)'''
-
-    valeursdatedebut = (date_formatee_debut)
-    valeursdatefin= (date_formatee_fin)
-
 
 
     mycursor.execute('''SELECT id_projet FROM Projet ORDER BY id_projet DESC LIMIT 1''')
@@ -143,7 +105,6 @@ def nouveau_projet(mycursor):
     else:
         for element in derniere_ligne:
             nombre_de_groupe_bdd=element
-    N =int(input("nombre de d'eleve par groupe?(2):") or"2")
     nombre_de_groupe = int(L//N)
     print("nombre de group",nombre_de_groupe_bdd,"\n")
     suplement = L%N #modulo du nombre d'eleve par groupe 
@@ -215,7 +176,7 @@ def nouveau_projet(mycursor):
 
             print("\n")
     print(id_projet_tlup,"idprojettlup")
-    mycursor.execute(requeteprojet, (id_projet_tlup,nom_projet, valeursdatedebut, valeursdatefin))
+    mycursor.execute(requeteprojet, (id_projet_tlup,nom_projet))
 
 
 def aficher_projet(mycursor,suite_logique):
@@ -279,40 +240,58 @@ def aficher_projet(mycursor,suite_logique):
                                         print(eleve[id_eleve][y])
 
 cursor = db.cursor()
-cursor.execute('SELECT id_projet FROM Projet ORDER BY id_projet DESC LIMIT 1')
-id_groupe = cursor.fetchall()
-# Step 7: Convert the retrieved rows into a DataFrame using `pd.DataFrame`
-df_groupe = pd.DataFrame(id_groupe)
-mycursor.execute("SELECT * FROM Projet")
-df_projet = pd.DataFrame(cursor.fetchall())
-mycursor.execute("SELECT * FROM projet_groupe")
-df_projet_groupe = pd.DataFrame(cursor.fetchall())
-mycursor.execute("SELECT * FROM eleve_groupe")
-df_eleve_groupe = pd.DataFrame(cursor.fetchall())
-mycursor.execute("SELECT * FROM eleve")
-df_eleve = pd.DataFrame(cursor.fetchall())
 
-id_dernier_projet= value = df_projet.iloc[-1, 0]
-print('dernierprojet= ',id_dernier_projet,", nom= ",df_projet.iloc[-1, 1])
-st.title(f"binomotron: {df_projet.iloc[-1, 1]}")
-filtered_df_groupe = df_projet_groupe[df_projet_groupe[0] == df_projet.iloc[-1, 0]]
-print(filtered_df_groupe[1].values)
-i=1
-#merged_df = pd.merge(df_eleve_groupe, df_eleve, left_on=0, right_on=0, how='left')
-#print(merged_df)
-for element in (filtered_df_groupe[1].values):
-    st.title(f"Groupe: {i}")
-    i=i+1
-    print('i=',i)
-    
-    filtered_df_eleve = df_eleve_groupe[df_eleve_groupe[1] == element]
-    print('id eleve',filtered_df_eleve)
-    
-    merged_df = pd.merge(filtered_df_eleve, df_eleve, left_on=0, right_on=0, how='left')
-    print(merged_df)
-    df_test=pd.DataFrame(merged_df)
-    st.dataframe(df_test)
-    
+
+def afichage_last(cursor):
+    cursor.execute('SELECT id_projet FROM Projet ORDER BY id_projet DESC LIMIT 1')
+    id_groupe = cursor.fetchall()
+    df_groupe = pd.DataFrame(id_groupe)
+    mycursor.execute("SELECT * FROM Projet")
+    df_projet = pd.DataFrame(cursor.fetchall())
+    mycursor.execute("SELECT * FROM projet_groupe")
+    df_projet_groupe = pd.DataFrame(cursor.fetchall())
+    mycursor.execute("SELECT * FROM eleve_groupe")
+    df_eleve_groupe = pd.DataFrame(cursor.fetchall())
+    mycursor.execute("SELECT * FROM eleve")
+    df_eleve = pd.DataFrame(cursor.fetchall())
+    id_dernier_projet= value = df_projet.iloc[-1, 0]
+    st.title(f"binomotron: {df_projet.iloc[-1, 1]}")
+    filtered_df_groupe = df_projet_groupe[df_projet_groupe[0] == df_projet.iloc[-1, 0]]
+    i=1
+    for element in (filtered_df_groupe[1].values):
+        st.title(f"Groupe: {i}")
+        i=i+1
+        filtered_df_eleve = df_eleve_groupe[df_eleve_groupe[1] == element]        
+        merged_df = pd.merge(filtered_df_eleve, df_eleve, left_on=0, right_on=0, how='left')
+        df_test=pd.DataFrame(merged_df)
+        st.dataframe(df_test)
+
+
+
+def main(cursor):
+    st.sidebar.title("Navigation")
+    page = st.sidebar.selectbox("Sélectionnez une page", ("Accueil", "Résultats"))
+
+    if page == "Accueil":
+        if __name__ == "__main__":
+            afichage_last(cursor)
+    elif page == "Résultats":
+        mycursor.execute("SELECT id_eleve FROM eleve")
+        idresult = mycursor.fetchall()
+        nombre_eleve=len(idresult)
+        max_goupe=nombre_eleve//2
+        
+        form = st.form("my_form")
+        nom_projet=form.text_input("Inside the form")
+        N = st.slider("nombre de personne par groupe:", 2, max_goupe, 2)
+        submit_button = st.button("Submit")
+        nom_projet =input("nom du projet:"or"projet test")
+        if submit_button:
+            nouveau_projet(cursor,nom_projet,N)
+if __name__ == "__main__":
+    main(cursor)
+
+
 
 db.commit()
 mycursor.execute("SET FOREIGN_KEY_CHECKS=0;")
