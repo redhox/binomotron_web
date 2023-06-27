@@ -263,13 +263,40 @@ def afichage_last(cursor):
     i=1
     df_eleve[0]=df_eleve[0]-1
     for element in (filtered_df_groupe[1].values):
-        st.title(f"Groupe: {i}{element}")
+        st.title(f"Groupe: {i}")
         i=i+1
         filtered_df_eleve = df_eleve_groupe[df_eleve_groupe[1] == element]
         merged_df = pd.merge(filtered_df_eleve, df_eleve, left_on=0, right_on=0, how='left')
         st.dataframe(merged_df)
 
-
+def afichage_autre(mycursor):
+    mycursor.execute("SELECT * FROM Projet")
+    df_projet = pd.DataFrame(mycursor.fetchall())
+    mycursor.execute("SELECT * FROM projet_groupe")
+    df_projet_groupe = pd.DataFrame(mycursor.fetchall())
+    mycursor.execute("SELECT * FROM eleve_groupe")
+    df_eleve_groupe = pd.DataFrame(mycursor.fetchall())
+    mycursor.execute("SELECT * FROM eleve")
+    df_eleve = pd.DataFrame(mycursor.fetchall())
+    mycursor.execute("SELECT libelle FROM Projet")
+    projet_page = mycursor.fetchall()
+    nombre_projet=len(projet_page)
+    df_projet=pd.DataFrame(projet_page)
+    selected_option = st.selectbox('Selectioner le Projet', df_projet[0])
+    selected_index = (df_projet[df_projet[0] == selected_option].index[0])+1
+    
+    projet= df_projet[df_projet[0]==selected_index]
+    filtered_df_groupe = df_projet_groupe[df_projet_groupe[0] == selected_index]
+    st.title(f"Projet {selected_index} : {selected_option}")
+    i=1
+    df_eleve[0]=df_eleve[0]-1
+    for element in (filtered_df_groupe[1].values):
+        st.header(f"Groupe: {i}")
+        i=i+1
+        filtered_df_eleve = df_eleve_groupe[df_eleve_groupe[1] == element]
+        merged_df = pd.merge(filtered_df_eleve, df_eleve, left_on=0, right_on=0, how='left')
+        st.dataframe(merged_df)
+    
 
 def main(cursor):
     st.sidebar.title("Navigation")
@@ -285,14 +312,14 @@ def main(cursor):
         nombre_eleve=len(idresult)
         max_goupe=nombre_eleve//2
         
-        nom_projet=st.text_input("Inside the form")
-        N = st.slider("nombre de personne par groupe:", 2, max_goupe, 2)
-        submit_button = st.button("Submit")
+        nom_projet=st.text_input("Nom du nouveau Projet")
+        N = st.slider("Nombre de personne par Groupe:", 2, max_goupe, 2)
+        submit_button = st.button("Continuer")
         
         if submit_button:
             nouveau_projet(cursor,nom_projet,N)
     elif page == "Autre Projet":
-        st.title("autre projet")
+        afichage_autre(mycursor)
 
 
 if __name__ == "__main__":
