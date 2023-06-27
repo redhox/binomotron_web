@@ -19,7 +19,6 @@ mycursor = db.cursor()
 
 def nouveau_projet(mycursor,nom_projet,N):
     print(" nouveau projet")
-        
     #information de la table "eleve"
     mycursor.execute("SELECT id_eleve FROM eleve")
     idresult = mycursor.fetchall()
@@ -118,6 +117,7 @@ def nouveau_projet(mycursor,nom_projet,N):
         mycursor.execute(requete, valeurs)
         requeteprojetgroupe = "INSERT INTO projet_groupe ( id_projet,id_groupe) VALUES (%s,%s)"
         mycursor.execute(requeteprojetgroupe,( id_projet_tlup,nombre_de_groupe_bdd+i))
+        print("id projet:",id_projet_tlup," groupe:",nombre_de_groupe_bdd+i," i:",i)
     db.commit()
     if (suplement!=int):#si il y a un modulo(les groupe seront pas remplie) il lancera la prochaine boucle a 0+modulo
         e=suplement
@@ -178,6 +178,7 @@ def nouveau_projet(mycursor,nom_projet,N):
             print("\n")
     print(id_projet_tlup,"idprojettlup")
     mycursor.execute(requeteprojet, (id_projet_tlup,nom_projet))
+    afichage_last(mycursor)
 
 
 def aficher_projet(mycursor,suite_logique):
@@ -255,28 +256,30 @@ def afichage_last(cursor):
     df_eleve_groupe = pd.DataFrame(cursor.fetchall())
     mycursor.execute("SELECT * FROM eleve")
     df_eleve = pd.DataFrame(cursor.fetchall())
+    
     id_dernier_projet= value = df_projet.iloc[-1, 0]
     st.title(f"binomotron: {df_projet.iloc[-1, 1]}")
     filtered_df_groupe = df_projet_groupe[df_projet_groupe[0] == df_projet.iloc[-1, 0]]
     i=1
+    df_eleve[0]=df_eleve[0]-1
     for element in (filtered_df_groupe[1].values):
-        st.title(f"Groupe: {i}")
+        st.title(f"Groupe: {i}{element}")
         i=i+1
-        filtered_df_eleve = df_eleve_groupe[df_eleve_groupe[1] == element]        
+        filtered_df_eleve = df_eleve_groupe[df_eleve_groupe[1] == element]
         merged_df = pd.merge(filtered_df_eleve, df_eleve, left_on=0, right_on=0, how='left')
-        df_test=pd.DataFrame(merged_df)
-        st.dataframe(df_test)
+        st.dataframe(merged_df)
 
 
 
 def main(cursor):
     st.sidebar.title("Navigation")
-    page = st.sidebar.selectbox("Sélectionnez une page", ("Accueil", "Résultats"))
+    page = st.sidebar.selectbox("Sélectionnez une page", ("Groupe Actuel", "Nouveau Projet","Autre Projet"))
 
-    if page == "Accueil":
+    if page == "Groupe Actuel":
         if __name__ == "__main__":
             afichage_last(cursor)
-    elif page == "Résultats":
+            
+    elif page == "Nouveau Projet":
         mycursor.execute("SELECT id_eleve FROM eleve")
         idresult = mycursor.fetchall()
         nombre_eleve=len(idresult)
@@ -285,8 +288,13 @@ def main(cursor):
         nom_projet=st.text_input("Inside the form")
         N = st.slider("nombre de personne par groupe:", 2, max_goupe, 2)
         submit_button = st.button("Submit")
+        
         if submit_button:
             nouveau_projet(cursor,nom_projet,N)
+    elif page == "Autre Projet":
+        st.title("autre projet")
+
+
 if __name__ == "__main__":
     main(cursor)
 
