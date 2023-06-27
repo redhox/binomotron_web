@@ -73,6 +73,7 @@ def nouveau_projet(mycursor,nom_projet,N):
                     print(" ligne ",ligne_projet," z ",z)
                     id_projet_tlup=ligne_projet+1
                 print(id_projet_tlup,"id_projet_tlup")
+    requeteprojet = '''INSERT INTO Projet (id_projet,libelle) VALUES (%s,%s)'''
 
 # Validation des changements
 #db.commit()
@@ -281,11 +282,9 @@ def main(cursor):
         nombre_eleve=len(idresult)
         max_goupe=nombre_eleve//2
         
-        form = st.form("my_form")
-        nom_projet=form.text_input("Inside the form")
+        nom_projet=st.text_input("Inside the form")
         N = st.slider("nombre de personne par groupe:", 2, max_goupe, 2)
         submit_button = st.button("Submit")
-        nom_projet =input("nom du projet:"or"projet test")
         if submit_button:
             nouveau_projet(cursor,nom_projet,N)
 if __name__ == "__main__":
